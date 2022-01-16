@@ -10,7 +10,6 @@
  * Parallel and Distributed Systems - Electrical and Computer Engineering
  * 2022 Aristotle University Thessaloniki
  */ 
-
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -25,7 +24,7 @@ void print_model(int **model, int n) {
 }
 
 
-// Implement the sign function with a node's neighbors.
+// Implement the sign function with a node's neighbours.
 int sign(int self, int *neighbours, int neighbours_n) {
   int sum = self;
   for (int i = 0; i < neighbours_n; i++) {
@@ -47,6 +46,8 @@ int sign(int self, int *neighbours, int neighbours_n) {
  * Instead of using if's or implementing a struct of any sort, we will be using this.
  * Rolls the array into itself. Index `size` points to `0` and index `-1` points to `n-1`
  * Ask for the indices and the size of the model. 
+ * `+size` takes care of negative indices,
+ * `%size` takes care of indices greater than the size of the array.
  */
 int get_model(int **model, int i, int j, int n) {
   return model[(i + n) % n][(j + n) % n];
@@ -55,7 +56,7 @@ int get_model(int **model, int i, int j, int n) {
 
 int main (int argc, char **argv) {
   if (argc != 3) {
-    printf("Usage: ./v0.o N K, where N is size and K is iterations\n");
+    printf("Usage: ./v0.out N K, where N is size and K is iterations\n");
     return -1;
   }
   int N = atoi(argv[1]);
@@ -77,21 +78,41 @@ int main (int argc, char **argv) {
 
   /* ---------- START SIMULATION ---------- */
   int neighbours[4];
+  // The model before and after an iteration.
+  int **before = (int **) malloc(N * sizeof(int *));
+  int **after = (int **) malloc(N * sizeof(int *));
+
+  for (int i = 0; i < N; i++) {
+    before[i] = (int *) malloc(N * sizeof(int));
+    after[i] = (int *) calloc(N, sizeof(int));
+  }
+  for (int i = 0; i < N; i++) {
+    for (int j = 0; j < N; j++) {
+      before[i][j] = model[i][j];
+    }
+  }
 
   for (int iter = 0; iter < K; iter++) {
     for (int i = 0; i < N; i++) {
       for (int j = 0; j < N; j++) {
-        neighbours[0] = get_model(model, i, j + 1, N);
-        neighbours[1] = get_model(model, i, j - 1, N);
-        neighbours[2] = get_model(model, i + 1, j, N);
-        neighbours[3] = get_model(model, i - 1, j, N);
+        neighbours[0] = get_model(before, i, j + 1, N);
+        neighbours[1] = get_model(before, i, j - 1, N);
+        neighbours[2] = get_model(before, i + 1, j, N);
+        neighbours[3] = get_model(before, i - 1, j, N);
 
-        model[i][j] = sign(model[i][j], neighbours, 4);
+        after[i][j] = sign(before[i][j], neighbours, 4);
+      }
+    }
+
+    // After an iteration is done, pass the `after` values to the `before` model.
+    for (int i = 0; i < N; i++) {
+      for (int j = 0; j < N; j++) {
+        before[i][j] = after[i][j];
       }
     }
 
     printf("\nMODEL ON ITERATION iter = %d\n", iter);
-    print_model(model, N);
+    print_model(after, N);
   }
 
   return 0;
