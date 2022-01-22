@@ -7,8 +7,8 @@
 
 module load gcc/7.3.0 cuda/10.0.130
 
-nvcc v1_test.cu -o v1
+nvcc v2_test.cu -o v2.out
 
 nvidia-smi
-./v1 64 16 2
+./v2.out 4096 64 16 2
 
