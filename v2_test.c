@@ -83,10 +83,10 @@ int main(int argc, char **argv) {
       \t>> K is number of iterations");
     return -1;
   }
-  const int N = argv[1];
-  const int BLOCKSIZE = argv[2];
-  const int b = argv[3];
-  const int K = argv[4];
+  const int N = atoi(argv[1]);
+  const int BLOCKSIZE = atoi(argv[2]);
+  const int b = atoi(argv[3]);
+  const int K = atoi(argv[4]);
   const int size = N * N * sizeof(int);
 
   int *model = (int *) malloc(size);
