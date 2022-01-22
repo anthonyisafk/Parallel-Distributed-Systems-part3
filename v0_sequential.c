@@ -56,7 +56,7 @@ int get_model(int **model, int i, int j, int n) {
 
 int main (int argc, char **argv) {
   if (argc != 3) {
-    printf("Usage: ./v0.out N K, where N is size and K is iterations\n");
+    printf("Usage: v0.out N K, where N is size and K is iterations\n");
     return -1;
   }
   int N = atoi(argv[1]);
