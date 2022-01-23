@@ -1,3 +1,15 @@
+/**
+ * @file: v2_test.cu
+ * ****************************************
+ * @author: Antonios Antoniou
+ * @email: aantonii@ece.auth.gr
+ * ****************************************
+ * @description: Simulate the Ising model for a system of size `n x n` and `k` iterations.
+ * Each GPU thread simulates an iteration for a block of points.
+ * ****************************************
+ * Parallel and Distributed Systems - Electrical and Computer Engineering
+ * 2022 Aristotle University Thessaloniki.
+ */
 #include <stdio.h>
 #include <stdlib.h>
 

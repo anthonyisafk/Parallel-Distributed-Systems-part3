@@ -1,5 +1,5 @@
 /**
- * @file: v1.c
+ * @file: v1_test.cu
  * ****************************************
  * @author: Antonios Antoniou
  * @email: aantonii@ece.auth.gr
