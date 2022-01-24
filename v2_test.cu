@@ -88,7 +88,7 @@ void print_model(int *model, int size) {
 
 int main(int argc, char **argv) {
   if (argc != 4) {
-    printf("Usage: v2.out N BS B K, where\n\
+    printf("Usage: v2.out N BS K, where\n\
       \t>> N is size\n\
       \t>> BS is block size, i.e the size of the moment block\n\
       \t>> K is number of iterations");
@@ -114,6 +114,7 @@ int main(int argc, char **argv) {
   cudaMemcpy(d_before, model, size, cudaMemcpyHostToDevice);
   
   dim3 dim_block(BLOCKSIZE, BLOCKSIZE);
+  // Divide the block twice. Raise fewer threads that produce more workload.
   dim3 dim_grid(N/(dim_block.x * dim_block.x), N/(dim_block.y * dim_block.y));
 
   for (int iter = 0; iter < K; iter++) {
