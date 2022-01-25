@@ -49,9 +49,9 @@ __device__ int sign(int self, int *neighbours, int neighbours_n) {
 
 // Simulates the behavior of a single point for a single iteration.
 __global__ void simulate_model(int *before, int *after, int size) {
-  int i = blockIdx.x * blockDim.x + threadIdx.x;
-  int j = blockIdx.y * blockDim.y + threadIdx.y;
-  int index = i * size + j;
+  int index = blockIdx.x;
+  int i = index / size; /* the row on the 2D table the moment belongs to */
+  int j = index % size; /* the column on the 2D table the moment belongs to */
   int neighbours[4];
 
   if (i < size && j < size) {
@@ -77,12 +77,11 @@ void print_model(int *model, int size) {
 
 int main(int argc, char **argv) {
   if (argc != 4) {
-    printf("Usage: v1.out N B K, where N is size, B is block size and K is iterations\n");
+    printf("Usage: v1.out N K, where N is size, and K is iterations\n");
     return -1;
   }
   int N = atoi(argv[1]);
-  int BLOCKSIZE = atoi(argv[2]);
-  int K = atoi(argv[3]);
+  int K = atoi(argv[2]);
   const int size = N * N * sizeof(int);
 
   int *model = (int *) malloc(size);
@@ -98,12 +97,9 @@ int main(int argc, char **argv) {
   cudaMalloc((void **)&d_before, size);
   cudaMalloc((void **)&d_after, size);
   cudaMemcpy(d_before, model, size, cudaMemcpyHostToDevice);
-  
-  dim3 dim_block(BLOCKSIZE, BLOCKSIZE);
-  dim3 dim_grid(N/dim_block.x, N/dim_block.y);
 
   for (int iter = 0; iter < K; iter++) {
-    simulate_model<<<dim_grid, dim_block>>>(d_before, d_after, N);
+    simulate_model<<<size, 1>>>(d_before, d_after, N);
     // Pass the `after` values to the `before` model for the next iteration.
     cudaMemcpy(d_before, d_after, size, cudaMemcpyDeviceToDevice);
 
