@@ -51,18 +51,41 @@ __device__ int sign(int self, int *neighbours, int neighbours_n) {
 // Simulates the behavior of a block of points for a single iteration.
 // @param b: specifies the block size.
 __global__ void simulate_model(int *before, int *after, int N, int B) {
-  int thread_id = blockIdx.x * blockDim.x + threadIdx.x;
-  int i = thread_id / (N / B); /* the concurrent row on the 2D table the thread belongs to */
-  int j = thread_id % (N / B); /* the concurrent column on the 2D table the thread belongs to */
+  int thread_id = blockIdx.x * blockDim.x + threadIdx.x; /* unique ID tied to the thread */
+  int i = thread_id / (N / B); /* the concurrent batch of rows on the 2D table the thread belongs to */
+  int j = thread_id % (N / B); /* the concurrent batch of columns on the 2D table the thread belongs to */
+  int index = (i * N + j) * B; /* the northwest position of each block on the original model */
 
-  // The northwest position of each block. Iterate through the rest of the moments.
-  int index = (i * N + j) * B;
+  // Keep the block in the shared memory. Make sure the size allows for the neighbours to be stored as well.
+  __shared__ int* block_model;
+  int side = (blockDim.x * B + 2);
+  block_model = (int*) malloc(side * side * sizeof(int)); 
 
   int neighbours[4];
   for (int mx = 0; mx < B; mx++) {
     for (int my = 0; my < B; my++) {
       if (i + mx < N && j + my < N) {
-        int block_index = index + mx * N + my;
+        int block_index = index + mx * N + my; /* the index of the moment in the original model */
+        int model_row = threadIdx.x * B
+        // Put the values of the block in the center. Surround them with the neighbours.
+        int model_index = (threadIdx.x * B + mx + 1) * side + j + my + 1;
+
+        int model_row = threadIdx.x
+
+        block_model[model_index] = before[block_index];
+
+        if (j + my + 1 == 1){ /* add left neighbour */
+          block_model[model_index - 1] = get_model(before, i*B + mx, j*B + my - 1, N);
+        }
+        else if (j + my + 1 == side - 2) { /* add right neighbour */
+          block_model[model_index + 1] = get_model(before, i*B + mx, j*B + my + 1, N);
+        } 
+        if (i + mx + 1 == 1) { /* add upper neighbour */
+          block_model[model_index - side] = get_model(before, i*B + mx - 1, j*B + my, N);
+        }
+        else if (i + mx + 1 == side - 2) { /* add lower neighbour */
+          block_model[model_index + side] = get_model(before, i*B + mx + 1, j*B + my, N);
+        }
 
         // Decompose the `index` parameter into row and column indices.
         // Add mx and my to them.
@@ -75,6 +98,18 @@ __global__ void simulate_model(int *before, int *after, int N, int B) {
       }
     }
   }
+  __syncthreads();
+
+  if(blockIdx.x == 1 && threadIdx.x == 0) {
+    printf("\n");
+    for (int i = 0; i < side; i++) {
+      for (int j = 0; j < side; j++) {
+        printf("%d ", block_model[i * side + j]);
+      }
+      printf("\n");
+    }
+  }
+
 }
 
 
@@ -89,19 +124,23 @@ void print_model(int *model, int N) {
 
 
 int main(int argc, char **argv) {
-  if (argc != 5) {
-    printf("Usage: v3.out N BS B K, where:\
-      \n -N is size,\
-      \n -BS is GPU block size, i.e threads per block,\
-      \n -B is size of moment block and\
-      \n -K is iterations\n"
-    );
-    return -1;
-  }
-  int N = atoi(argv[1]);
-  int BS = atoi(argv[2]);
-  int B = atoi(argv[3]);
-  int K = atoi(argv[4]);
+//  if (argc != 5) {
+//    printf("Usage: v3.out N BS B K, where:\
+//      \n -N is size,\
+//      \n -BS is GPU block size, i.e threads per block,\
+//      \n -B is size of moment block and\
+//      \n -K is iterations\n"
+//    );
+//    return -1;
+//  }
+//  int N = atoi(argv[1]);
+//  int BS = atoi(argv[2]);
+//  int B = atoi(argv[3]);
+//  int K = atoi(argv[4]);
+  int N = 16;
+  int BS = 1;
+  int B = 2;
+  int K = 1;
   const int size = N * N * sizeof(int);
 
   int *model = (int *) malloc(size);
