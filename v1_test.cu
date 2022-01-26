@@ -14,12 +14,22 @@
 #include <stdlib.h>
 
 
+void print_model(int *model, int N) {
+  for (int i = 0; i < N; i++) {
+    for (int j = 0; j < N; j++) {
+      printf("%d ", model[i * N + j]);
+    }
+    printf("\n");
+  }
+}
+
+
 /**
  * Instead of using if's or implementing a struct of any sort, we will be using this.
- * Rolls the array into itself. Index `size` points to `0` and index `-1` points to `n-1`
+ * Rolls the array into itself. Index `N` points to `0` and index `-1` points to `N-1`
  * Ask for the indices and the size of the model.
- * `+size` takes care of negative indices,
- * `%size` takes care of indices greater than the size of the array.
+ * `+N` takes care of negative indices,
+ * `%N` takes care of indices greater than the size of the array.
  */
 __device__ int get_model(int *model, int i, int j, int size) {
   int x = (i + size) % size;
@@ -50,8 +60,8 @@ __device__ int sign(int self, int *neighbours, int neighbours_n) {
 // Simulates the behavior of a single point for a single iteration.
 __global__ void simulate_model(int *before, int *after, int N) {
   int index = blockIdx.x;
-  int i = index / N; /* the row on the 2D table the moment belongs to */
-  int j = index % N; /* the column on the 2D table the moment belongs to */
+  int i = index / N; /* the concurrent batch of rows on the 2D table the thread belongs to */
+  int j = index % N; /* the concurrent batch of columns on the 2D table the thread belongs to */
   int neighbours[4];
 
   if (i < N && j < N) {
@@ -61,16 +71,6 @@ __global__ void simulate_model(int *before, int *after, int N) {
     neighbours[3] = get_model(before, i - 1, j, N);
 
     after[index] = sign(before[index], neighbours, 4);
-  }
-}
-
-
-void print_model(int *model, int N) {
-  for (int i = 0; i < N; i++) {
-    for (int j = 0; j < N; j++) {
-      printf("%d ", model[i * N + j]);
-    }
-    printf("\n");
   }
 }
 

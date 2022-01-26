@@ -14,6 +14,16 @@
 #include <stdlib.h>
 
 
+void print_model(int *model, int N) {
+  for (int i = 0; i < N; i++) {
+    for (int j = 0; j < N; j++) {
+      printf("%d ", model[i * N + j]);
+    }
+    printf("\n");
+  }
+}
+
+
 /**
  * Instead of using if's or implementing a struct of any sort, we will be using this.
  * Rolls the array into itself. Index `N` points to `0` and index `-1` points to `N-1`
@@ -50,8 +60,8 @@ __device__ int sign(int self, int *neighbours, int neighbours_n) {
 // Simulates the behavior of a block of points for a single iteration.
 // @param b: specifies the block size.
 __global__ void simulate_model(int *before, int *after, int N, int B) {
-  int i = blockIdx.x / (N / B); /* the concurrent row on the 2D table the thread belongs to */
-  int j = blockIdx.x % (N / B); /* the concurrent column on the 2D table the thread belongs to */
+  int i = blockIdx.x / (N / B); /* the concurrent batch of rows on the 2D table the thread belongs to */
+  int j = blockIdx.x % (N / B); /* the concurrent batch of columns on the 2D table the thread belongs to */
 
   // The northwest position of each block. Iterate through the rest of the moments.
   int index = (i * N + j) * B;
@@ -72,16 +82,6 @@ __global__ void simulate_model(int *before, int *after, int N, int B) {
         after[block_index] = sign(before[block_index], neighbours, 4);
       }
     }
-  }
-}
-
-
-void print_model(int *model, int N) {
-  for (int i = 0; i < N; i++) {
-    for (int j = 0; j < N; j++) {
-      printf("%d ", model[i * N + j]);
-    }
-    printf("\n");
   }
 }
 
