@@ -44,10 +44,10 @@ int sign(int self, int *neighbours, int neighbours_n) {
 
 /**
  * Instead of using if's or implementing a struct of any sort, we will be using this.
- * Rolls the array into itself. Index `size` points to `0` and index `-1` points to `n-1`
+ * Rolls the array into itself. Index `N` points to `0` and index `-1` points to `N-1`
  * Ask for the indices and the size of the model. 
- * `+size` takes care of negative indices,
- * `%size` takes care of indices greater than the size of the array.
+ * `+N` takes care of negative indices,
+ * `%N` takes care of indices greater than the size of the array.
  */
 int get_model(int **model, int i, int j, int n) {
   return model[(i + n) % n][(j + n) % n];
