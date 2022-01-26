@@ -48,27 +48,27 @@ __device__ int sign(int self, int *neighbours, int neighbours_n) {
 
 
 // Simulates the behavior of a single point for a single iteration.
-__global__ void simulate_model(int *before, int *after, int size) {
+__global__ void simulate_model(int *before, int *after, int N) {
   int index = blockIdx.x;
-  int i = index / size; /* the row on the 2D table the moment belongs to */
-  int j = index % size; /* the column on the 2D table the moment belongs to */
+  int i = index / N; /* the row on the 2D table the moment belongs to */
+  int j = index % N; /* the column on the 2D table the moment belongs to */
   int neighbours[4];
 
-  if (i < size && j < size) {
-    neighbours[0] = get_model(before, i, j + 1, size);
-    neighbours[1] = get_model(before, i, j - 1, size);
-    neighbours[2] = get_model(before, i + 1, j, size);
-    neighbours[3] = get_model(before, i - 1, j, size);
+  if (i < N && j < N) {
+    neighbours[0] = get_model(before, i, j + 1, N);
+    neighbours[1] = get_model(before, i, j - 1, N);
+    neighbours[2] = get_model(before, i + 1, j, N);
+    neighbours[3] = get_model(before, i - 1, j, N);
 
     after[index] = sign(before[index], neighbours, 4);
   }
 }
 
 
-void print_model(int *model, int size) {
-  for (int i = 0; i < size; i++) {
-    for (int j = 0; j < size; j++) {
-      printf("%d ", model[i * size + j]);
+void print_model(int *model, int N) {
+  for (int i = 0; i < N; i++) {
+    for (int j = 0; j < N; j++) {
+      printf("%d ", model[i * N + j]);
     }
     printf("\n");
   }
@@ -76,7 +76,7 @@ void print_model(int *model, int size) {
 
 
 int main(int argc, char **argv) {
-  if (argc != 4) {
+  if (argc != 3) {
     printf("Usage: v1.out N K, where N is size, and K is iterations\n");
     return -1;
   }
