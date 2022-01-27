@@ -13,6 +13,18 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/time.h>
+#include <time.h>
+
+
+void print_model(int *model, int N) {
+  for (int i = 0; i < N; i++) {
+    for (int j = 0; j < N; j++) {
+      printf("%d ", model[i * N + j]);
+    }
+    printf("\n");
+  }
+}
 
 
 /**
@@ -66,8 +78,7 @@ __global__ void simulate_model(int *before, int *after, int N, int B) {
       if (i + mx < N && j + my < N) {
         int block_index = index + mx * N + my; /* the index of the moment in the original model */
         // Put the values of the block in the center. Surround them with the neighbours.
-        int model_index = (threadIdx.x * B + mx + 1) * side + j + my + 1;
-        block_model[model_index] = before[block_index];
+        block_model[block_index] = before[block_index];
 
         // if (j + my + 1 == 1){ /* add left neighbour */
         //   block_model[model_index - 1] = get_model(before, i*B + mx, j*B + my - 1, N);
@@ -105,16 +116,6 @@ __global__ void simulate_model(int *before, int *after, int N, int B) {
 }
 
 
-void print_model(int *model, int N) {
-  for (int i = 0; i < N; i++) {
-    for (int j = 0; j < N; j++) {
-      printf("%d ", model[i * N + j]);
-    }
-    printf("\n");
-  }
-}
-
-
 int main(int argc, char **argv) {
   if (argc != 5) {
     printf("Usage: v3.out N BS B K, where:\
@@ -140,14 +141,18 @@ int main(int argc, char **argv) {
   for (int i = 0; i < N * N; i++) {
     model[i] = (rand() > RAND_MAX / 2) ? -1 : 1;
   }
-  printf("MODEL BEFORE FIRST ITERATION\n");
-  print_model(model, N);
+  // printf("MODEL BEFORE FIRST ITERATION\n");
+  // print_model(model, N);
 
   // The model before and after each iteration on the GPU.
   int *d_before, *d_after;
   cudaMalloc((void **)&d_before, size);
   cudaMalloc((void **)&d_after, size);
   cudaMemcpy(d_before, model, size, cudaMemcpyHostToDevice);
+
+  struct timeval stop, start;
+
+  gettimeofday(&start, NULL);
   
   for (int iter = 0; iter < K; iter++) {
     simulate_model<<<N * N / (B * B * BS), BS>>>(d_before, d_after, N, B);
@@ -155,9 +160,19 @@ int main(int argc, char **argv) {
     cudaMemcpy(d_before, d_after, size, cudaMemcpyDeviceToDevice);
 
     cudaMemcpy(after, d_after, size, cudaMemcpyDeviceToHost);
-    printf("\nMODEL AFTER ITERATION iter = %d\n", iter);
-    print_model(after, N);
+    // printf("\nMODEL AFTER ITERATION iter = %d\n", iter);
+    // print_model(after, N);
   }
+
+  gettimeofday(&stop, NULL);
+  float timediff =
+  (stop.tv_sec * 1000000.0 + (float)stop.tv_usec - start.tv_sec * 1000000.0 - (float)start.tv_usec) / 1000000;
+  printf("\nV3: Size(%dx%d), BS=%d, B=%d, iterations=%d, took %f seconds\n",
+  N, N, BS, B, K, timediff);
+    
+  FILE* results = fopen("results/v3_results.txt", "a");
+  fprintf(results, "%d,%d,%d,%d,%f\n", N, BS, B, K, timediff);
+  fclose(results); 
 
   return 0;
 }

@@ -12,6 +12,8 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/time.h>
+#include <time.h>
 
 
 void print_model(int *model, int N) {
@@ -89,8 +91,8 @@ int main(int argc, char **argv) {
   for (int i = 0; i < N * N; i++) {
     model[i] = (rand() > RAND_MAX / 2) ? -1 : 1;
   }
-  printf("MODEL BEFORE FIRST ITERATION\n");
-  print_model(model, N);
+  // printf("MODEL BEFORE FIRST ITERATION\n");
+  // print_model(model, N);
 
   // The model before and after each iteration on the GPU.
   int *d_before, *d_after;
@@ -98,15 +100,27 @@ int main(int argc, char **argv) {
   cudaMalloc((void **)&d_after, size);
   cudaMemcpy(d_before, model, size, cudaMemcpyHostToDevice);
 
+  struct timeval stop, start;
+  gettimeofday(&start, NULL);
+
   for (int iter = 0; iter < K; iter++) {
     simulate_model<<<size, 1>>>(d_before, d_after, N);
     // Pass the `after` values to the `before` model for the next iteration.
     cudaMemcpy(d_before, d_after, size, cudaMemcpyDeviceToDevice);
 
     cudaMemcpy(after, d_after, size, cudaMemcpyDeviceToHost);
-    printf("\nMODEL AFTER ITERATION iter = %d\n", iter);
-    print_model(after, N);
+    // printf("\nMODEL AFTER ITERATION iter = %d\n", iter);
+    // print_model(after, N);
   }
+
+  gettimeofday(&stop, NULL);
+  float timediff =
+  (stop.tv_sec * 1000000.0 + (float)stop.tv_usec - start.tv_sec * 1000000.0 - (float)start.tv_usec) / 1000000;
+  printf("\nV1: Size(%dx%d), iterations=%d, took %f seconds\n", N, N, K, timediff);
+  
+  FILE* results = fopen("results/v1_results.txt", "a");
+  fprintf(results, "%d,%d,%f\n", N, K, timediff);
+  fclose(results);
 
   return 0;
 }
