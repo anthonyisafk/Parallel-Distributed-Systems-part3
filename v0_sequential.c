@@ -12,6 +12,8 @@
  */ 
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/time.h>
+#include <time.h>
 
 
 void print_model(int **model, int n) {
@@ -73,8 +75,8 @@ int main (int argc, char **argv) {
       model[i][j] = (rand() > RAND_MAX / 2) ? -1 : 1;
     }
   }
-  printf("MODEL BEFORE FIRST ITERATION\n");
-  print_model(model, N);
+  // printf("MODEL BEFORE FIRST ITERATION\n");
+  // print_model(model, N);
 
   /* ---------- START SIMULATION ---------- */
   int neighbours[4];
@@ -91,6 +93,9 @@ int main (int argc, char **argv) {
       before[i][j] = model[i][j];
     }
   }
+
+  struct timeval stop, start;
+  gettimeofday(&start, NULL);
 
   for (int iter = 0; iter < K; iter++) {
     for (int i = 0; i < N; i++) {
@@ -111,9 +116,18 @@ int main (int argc, char **argv) {
       }
     }
 
-    printf("\nMODEL ON ITERATION iter = %d\n", iter);
-    print_model(after, N);
+    // printf("\nMODEL ON ITERATION iter = %d\n", iter);
+    // print_model(after, N);
   }
+
+  gettimeofday(&stop, NULL);
+  float timediff =
+  (stop.tv_sec * 1000000.0 + (float)stop.tv_usec - start.tv_sec * 1000000.0 - (float)start.tv_usec) / 1000000;
+  printf("\nV0: Size(%dx%d), iterations=%d, took %f seconds\n", N, N, K, timediff);
+  
+  FILE* results = fopen("results/v0_results.txt", "a");
+  fprintf(results, "%d,%d,%f\n", N, K, timediff);
+  fclose(results);
 
   return 0;
 }
