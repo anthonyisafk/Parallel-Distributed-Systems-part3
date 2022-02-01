@@ -104,7 +104,7 @@ int main(int argc, char **argv) {
   gettimeofday(&start, NULL);
 
   for (int iter = 0; iter < K; iter++) {
-    simulate_model<<<size, 1>>>(d_before, d_after, N);
+    simulate_model<<<N * N, 1>>>(d_before, d_after, N);
     // Pass the `after` values to the `before` model for the next iteration.
     cudaMemcpy(d_before, d_after, size, cudaMemcpyDeviceToDevice);
 

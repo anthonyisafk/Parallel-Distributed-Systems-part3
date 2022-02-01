@@ -36,7 +36,7 @@ Below are the tests conducted for sizes **16, 64, 256, 512, 1024** for **1000 it
 ## V1 - GPU with one thread per moment
 For this stage of the project, the model is copied to the GPU and each moment (i.e. node on the array) is handled by a thread. This is made easier by turning the model to a **1D array**. For starters, each thread is placed inside its own block:
 ```c
-simulate_model<<<size, 1>>>(d_before, d_after, N);
+simulate_model<<<N * N, 1>>>(d_before, d_after, N);
 ```
 ![V1 measurements](./image/v1_plot.jpeg)
 \
