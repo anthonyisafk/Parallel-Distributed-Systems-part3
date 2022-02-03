@@ -79,19 +79,6 @@ __global__ void simulate_model(int *before, int *after, int N, int B) {
         int block_index = index + mx * N + my; /* the index of the moment in the original model */
         // Put the values of the block in the center. Surround them with the neighbours.
         block_model[block_index] = before[block_index];
-
-        // if (j + my + 1 == 1){ /* add left neighbour */
-        //   block_model[model_index - 1] = get_model(before, i*B + mx, j*B + my - 1, N);
-        // }
-        // else if (j + my + 1 == side - 2) { /* add right neighbour */
-        //   block_model[model_index + 1] = get_model(before, i*B + mx, j*B + my + 1, N);
-        // } 
-        // if (i + mx + 1 == 1) { /* add upper neighbour */
-        //   block_model[model_index - side] = get_model(before, i*B + mx - 1, j*B + my, N);
-        // }
-        // else if (i + mx + 1 == side - 2) { /* add lower neighbour */
-        //   block_model[model_index + side] = get_model(before, i*B + mx + 1, j*B + my, N);
-        // }
       }
     }
   }
@@ -130,10 +117,6 @@ int main(int argc, char **argv) {
   int BS = atoi(argv[2]);
   int B = atoi(argv[3]);
   int K = atoi(argv[4]);
-  // int N = 16;
-  // int BS = 1;
-  // int B = 2;
-  // int K = 1;
   const int size = N * N * sizeof(int);
 
   int *model = (int *) malloc(size);
